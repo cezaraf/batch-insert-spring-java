@@ -1,9 +1,9 @@
 package dev.cezar.batch.postgresql;
 
+import com.zaxxer.hikari.HikariDataSource;
 import dev.cezar.batch.postgresql.service.BatchInsertRepository;
 import dev.cezar.batch.postgresql.service.CopyInsertRepository;
 import dev.cezar.batch.postgresql.service.JsonInsertService;
-import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -15,6 +15,7 @@ import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -26,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class JsonBulkInsertIntegrationTest {
 
     private ObjectMapper objectMapper = new ObjectMapper();
+    private String schema;
 
     @Container
     static PostgreSQLContainer<?> postgres =
@@ -39,18 +41,27 @@ public class JsonBulkInsertIntegrationTest {
 
     @BeforeAll
     void setup() {
+
+        this.schema = UUID.randomUUID().toString();
+
         var dataSource = createDataSource();
+
         this.jdbcTemplate = new JdbcTemplate(dataSource);
 
+        this.jdbcTemplate.execute("CREATE SCHEMA \"%s\"".formatted(this.schema));
+
         this.jdbcTemplate.execute(
-                "CREATE TABLE json_table (" +
-                        "id BIGINT PRIMARY KEY, " +
-                        "payload JSONB" +
-                        ")"
+                """
+                        create table "%s".json_table (
+                            id bigint primary key,
+                            payload jsonb
+                        )
+                        """.formatted(this.schema)
         );
 
-        var batchRepository = new BatchInsertRepository(this.jdbcTemplate, this.objectMapper);
-        var copyRepository = new CopyInsertRepository(this.jdbcTemplate, this.objectMapper);
+        var batchRepository = new BatchInsertRepository(this.schema, this.jdbcTemplate, this.objectMapper);
+
+        var copyRepository = new CopyInsertRepository(this.schema, this.jdbcTemplate, this.objectMapper);
 
         this.jsonInsertService = new JsonInsertService(batchRepository, copyRepository);
     }
@@ -65,7 +76,7 @@ public class JsonBulkInsertIntegrationTest {
 
     @BeforeEach
     void cleanTable() {
-        this.jdbcTemplate.update("DELETE FROM json_table");
+        this.jdbcTemplate.update("delete from \"%s\".json_table".formatted(this.schema));
     }
 
     @Test
@@ -76,10 +87,10 @@ public class JsonBulkInsertIntegrationTest {
 
         this.jsonInsertService.insert(data);
 
-        var count = this.jdbcTemplate.queryForObject("SELECT COUNT(*) FROM json_table", Integer.class);
+        var count = this.jdbcTemplate.queryForObject("select count(*) from \"%s\".json_table".formatted(this.schema), Integer.class);
         assertThat(count).isEqualTo(size);
 
-        var payload = this.jdbcTemplate.queryForObject("SELECT payload FROM json_table WHERE id = 0", String.class);
+        var payload = this.jdbcTemplate.queryForObject("select payload from \"%s\".json_table where id = 0".formatted(this.schema), String.class);
         var json = this.objectMapper.readTree(payload);
 
         assertThat(json.isObject()).isTrue();
@@ -95,14 +106,14 @@ public class JsonBulkInsertIntegrationTest {
 
         this.jsonInsertService.insert(data);
 
-        var count = this.jdbcTemplate.queryForObject("SELECT COUNT(*) FROM json_table", Integer.class);
+        var count = this.jdbcTemplate.queryForObject("select count(*) from \"%s\".json_table".formatted(this.schema), Integer.class);
         assertThat(count).isEqualTo(size);
 
-        var ids = this.jdbcTemplate.queryForList("SELECT id FROM json_table WHERE id IN (1, 75_000, 150_000, 999_999)", Long.class);
+        var ids = this.jdbcTemplate.queryForList("select id from \"%s\".json_table where id in (1, 75_000, 150_000, 999_999)".formatted(this.schema), Long.class);
 
         assertThat(ids).contains(1L, 75_000L, 150_000L, 999_999L);
 
-        var payload = this.jdbcTemplate.queryForObject("SELECT payload FROM json_table WHERE id = 0", String.class);
+        var payload = this.jdbcTemplate.queryForObject("select payload from \"%s\".json_table where id = 0".formatted(this.schema), String.class);
         var json = this.objectMapper.readTree(payload);
 
         assertThat(json.isObject()).isTrue();

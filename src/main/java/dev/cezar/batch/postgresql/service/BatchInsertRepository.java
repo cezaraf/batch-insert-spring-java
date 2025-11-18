@@ -11,10 +11,12 @@ import java.util.Map;
 
 public class BatchInsertRepository {
 
+    private final String schema;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
 
-    public BatchInsertRepository(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
+    public BatchInsertRepository(String schema, JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
+        this.schema = schema;
         this.jdbcTemplate = jdbcTemplate;
         this.objectMapper = objectMapper;
     }
@@ -22,7 +24,7 @@ public class BatchInsertRepository {
     public void insertAll(List<Map<String, Object>> data) {
         final var batchSize = 5_000;
 
-        var sql = "INSERT INTO json_table (id, payload) VALUES (?, ?::jsonb)";
+        var sql = "insert into \"%s\".json_table (id, payload) values (?, ?::jsonb)".formatted(this.schema);
 
         for (var start = 0; start < data.size(); start += batchSize) {
             var end = Math.min(start + batchSize, data.size());

@@ -12,10 +12,12 @@ import java.util.Map;
 
 public class CopyInsertRepository {
 
+    private final String schema;
     private final DataSource dataSource;
     private final ObjectMapper objectMapper;
 
-    public CopyInsertRepository(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
+    public CopyInsertRepository(String schema, JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
+        this.schema = schema;
         this.dataSource = jdbcTemplate.getDataSource();
         this.objectMapper = objectMapper;
     }
@@ -27,7 +29,7 @@ public class CopyInsertRepository {
             var pgConnection = conn.unwrap(PGConnection.class);
             var copyManager = pgConnection.getCopyAPI();
 
-            var sqlCopy = "COPY json_table (id, payload) FROM STDIN WITH (FORMAT csv, DELIMITER ';', QUOTE '\"')";
+            var sqlCopy = "copy \"%s\".json_table (id, payload) from stdin with (format csv, delimiter ';', quote '\"')".formatted(this.schema);
 
             for (var start = 0; start < data.size(); start += copyBatchSize) {
                 var end = Math.min(start + copyBatchSize, data.size());
