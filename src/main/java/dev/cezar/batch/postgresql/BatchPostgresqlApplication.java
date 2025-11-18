@@ -1,4 +1,4 @@
-package br.tc.tcmgo.batch.postgresql;
+package dev.cezar.batch.postgresql;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

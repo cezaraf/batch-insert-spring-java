@@ -1,4 +1,4 @@
-package br.tc.tcmgo.batch.postgresql.service;// MyCopyRepository.java
+package dev.cezar.batch.postgresql.service;// MyCopyRepository.java
 
 import org.postgresql.PGConnection;
 import org.springframework.jdbc.core.JdbcTemplate;

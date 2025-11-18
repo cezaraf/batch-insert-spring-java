@@ -1,4 +1,4 @@
-package br.tc.tcmgo.batch.postgresql.service;
+package dev.cezar.batch.postgresql.service;
 
 import java.util.List;
 import java.util.Map;

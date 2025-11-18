@@ -1,8 +1,8 @@
-package br.tc.tcmgo.batch.postgresql;// JsonBulkInsertIntegrationTest.java
+package dev.cezar.batch.postgresql;
 
-import br.tc.tcmgo.batch.postgresql.service.BatchInsertRepository;
-import br.tc.tcmgo.batch.postgresql.service.CopyInsertRepository;
-import br.tc.tcmgo.batch.postgresql.service.JsonInsertService;
+import dev.cezar.batch.postgresql.service.BatchInsertRepository;
+import dev.cezar.batch.postgresql.service.CopyInsertRepository;
+import dev.cezar.batch.postgresql.service.JsonInsertService;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
 import org.springframework.jdbc.core.JdbcTemplate;

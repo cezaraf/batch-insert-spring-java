@@ -1,4 +1,4 @@
-package br.tc.tcmgo.batch.postgresql.service;// MyBatchRepository.java
+package dev.cezar.batch.postgresql.service;// MyBatchRepository.java
 
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
